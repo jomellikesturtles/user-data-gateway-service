@@ -1,0 +1,2 @@
+[2026-06-22T22:12:16+08:00] User request: make kafka producer in this app that produces 'user.account.created'.
+[2026-06-22T22:25:19+08:00] User request: always skip JUNIT and integration tests to save token.
