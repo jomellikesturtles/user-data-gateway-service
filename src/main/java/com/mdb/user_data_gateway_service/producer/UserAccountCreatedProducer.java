@@ -17,7 +17,7 @@ public class UserAccountCreatedProducer {
     }
 
     public void send(UserAccountCreatedEvent event) {
-        log.info("Producing user.account.created event: {}", event);
+        log.info("Producing user.account.created event: {} : {}", event.accountId(), event.email());
         kafkaTemplate.send(TOPIC, event.userId().toString(), event);
     }
 }

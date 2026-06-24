@@ -1,0 +1,28 @@
+
+server:
+  port: 8081
+
+spring:
+  grpc:
+    server:
+      port: 9099
+      reflection:
+        enabled: true
+  application:
+    name: user-data-gateway-service
+  datasource:
+    url: jdbc:postgresql://localhost:5433/mdb_prod?currentSchema=public
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: localhost:9093
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
