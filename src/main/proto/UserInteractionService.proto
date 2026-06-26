@@ -1,0 +1,158 @@
+syntax = "proto3";
+
+package user_interaction;
+option java_multiple_files = true;
+option java_package = "com.mdb.user_data_gateway_service.grpc";
+option java_outer_classname = "UserInteractionProto";
+
+message InteractionRequest {
+    string user_id = 1;
+    string media_id = 2;
+    int32 page = 3;
+    int32 size = 4;
+    string list_id = 5;
+}
+
+message BookmarkResponse {
+    string id = 1;
+    string user_id = 2;
+    string media_id = 3;
+    int64 created_at = 4;
+}
+
+message FavoriteResponse {
+    string id = 1;
+    string user_id = 2;
+    string media_id = 3;
+    int64 created_at = 4;
+}
+
+message ProgressRequest {
+    string user_id = 1;
+    string media_id = 2;
+    int64 progress_seconds = 3;
+    int64 total_seconds = 4;
+    double percentage = 5;
+}
+
+message ProgressResponse {
+    string id = 1;
+    string user_id = 2;
+    string media_id = 3;
+    int64 progress_seconds = 4;
+    int64 total_seconds = 5;
+    bool is_finished = 6;
+    double percentage = 7;
+}
+
+message BookmarksListResponse {
+    repeated BookmarkResponse bookmarks = 1;
+    int64 total_elements = 2;
+}
+
+message FavoritesListResponse {
+    repeated FavoriteResponse favorites = 1;
+    int64 total_elements = 2;
+}
+
+message ProgressListResponse {
+    repeated ProgressResponse progresses = 1;
+    int64 total_elements = 2;
+}
+
+message ReviewRequest {
+    string id = 1;
+    string user_id = 2;
+    string media_id = 3;
+    string content = 4;
+    string title = 5;
+    double rating = 6;
+}
+
+message ReviewResponse {
+    string id = 1;
+    string user_id = 2;
+    string media_id = 3;
+    string content = 4;
+    string title = 5;
+    double rating = 6;
+    int64 created_at = 7;
+    int64 updated_at = 8;
+}
+
+message ReviewsListResponse {
+    repeated ReviewResponse reviews = 1;
+    int64 total_elements = 2;
+}
+
+message ListRequest {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string description = 4;
+    string media_id = 5;
+    int32 page = 6;
+    int32 size = 7;
+}
+
+message ListLinkMovieResponse {
+    string id = 1;
+    string list_id = 2;
+    string user_id = 3;
+    string media_id = 4;
+}
+
+message ListResponse {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string description = 4;
+    repeated ListLinkMovieResponse contents = 5;
+    int64 created_at = 6;
+}
+
+message ListsListResponse {
+    repeated ListResponse lists = 1;
+    int64 total_elements = 2;
+}
+
+message InteractionActionResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+service UserInteractionService {
+    // Bookmarks
+    rpc AddBookmark (InteractionRequest) returns (InteractionActionResponse);
+    rpc RemoveBookmark (InteractionRequest) returns (InteractionActionResponse);
+    rpc GetBookmarks (InteractionRequest) returns (BookmarksListResponse);
+    rpc IsBookmarked (InteractionRequest) returns (InteractionActionResponse);
+
+    // Favorites
+    rpc AddFavorite (InteractionRequest) returns (InteractionActionResponse);
+    rpc RemoveFavorite (InteractionRequest) returns (InteractionActionResponse);
+    rpc GetFavorites (InteractionRequest) returns (FavoritesListResponse);
+    rpc IsFavorite (InteractionRequest) returns (InteractionActionResponse);
+
+    // Playback Progress & History (Played/Watched)
+    rpc SavePlaybackProgress (ProgressRequest) returns (ProgressResponse);
+    rpc GetPlaybackProgress (InteractionRequest) returns (ProgressResponse);
+    rpc GetPlayedList (InteractionRequest) returns (ProgressListResponse);
+    rpc GetProgressList (InteractionRequest) returns (ProgressListResponse);
+    rpc DeletePlaybackProgress (InteractionRequest) returns (InteractionActionResponse);
+
+    // Reviews
+    rpc SubmitReview (ReviewRequest) returns (ReviewResponse);
+    rpc DeleteReview (ReviewRequest) returns (InteractionActionResponse);
+    rpc GetReviewsByMedia (InteractionRequest) returns (ReviewsListResponse);
+    rpc GetReviewsByUser (InteractionRequest) returns (ReviewsListResponse);
+
+    // Custom Lists
+    rpc CreateList (ListRequest) returns (ListResponse);
+    rpc DeleteList (ListRequest) returns (InteractionActionResponse);
+    rpc AddItemToList (ListRequest) returns (InteractionActionResponse);
+    rpc RemoveItemFromList (ListRequest) returns (InteractionActionResponse);
+    rpc EditList (ListRequest) returns (ListResponse);
+    rpc GetSingleList (ListRequest) returns (ListResponse);
+    rpc GetLists (ListRequest) returns (ListsListResponse);
+}
