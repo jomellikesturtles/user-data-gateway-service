@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package user_identity;
+option java_multiple_files = true;
+option java_package = "com.mdb.user_data_gateway_service.grpc";
+option java_outer_classname = "UserIdentityProto";
+
+// Account messages
+message CreateAccountRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message AccountResponse {
+    string id = 1;
+    string email = 2;
+    string status = 3;
+    int64 created_at = 4;
+}
+
+message FindAccountRequest {
+    string email = 1;
+    string id = 2;
+}
+
+// Profile messages
+message ProfileRequest {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string avatar = 4;
+    string bio = 5;
+    bool is_main = 6;
+}
+
+message ProfileResponse {
+    string id = 1;
+    string user_id = 2;
+    string name = 3;
+    string avatar = 4;
+    string bio = 5;
+    bool is_main = 6;
+}
+
+message ProfilesListResponse {
+    repeated ProfileResponse profiles = 1;
+}
+
+message ProfileDeleteRequest {
+    string user_id = 1;
+    string profile_name = 2;
+}
+
+// Preferences messages
+message PreferencesRequest {
+    string user_id = 1;
+    string language = 2;
+    bool is_dark_mode = 3;
+    bool is_auto_scan_enabled = 4;
+    double torrent_seed_ratio = 5;
+    bool auto_play_trailer = 6;
+    bool play_trailer_before_show = 7;
+    bool is_favorites_private = 8;
+    bool is_bookmarks_private = 9;
+    bool is_played_private = 10;
+    bool is_progress_private = 11;
+}
+
+message PreferencesResponse {
+    string id = 1;
+    string user_id = 2;
+    string language = 3;
+    bool is_dark_mode = 4;
+    bool is_auto_scan_enabled = 5;
+    double torrent_seed_ratio = 6;
+    bool auto_play_trailer = 7;
+    bool play_trailer_before_show = 8;
+    bool is_favorites_private = 9;
+    bool is_bookmarks_private = 10;
+    bool is_played_private = 11;
+    bool is_progress_private = 12;
+}
+
+message IdentityActionResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+service UserIdentityService {
+    // Accounts
+    rpc CreateAccount(CreateAccountRequest) returns (AccountResponse);
+    rpc FindAccountByEmail(FindAccountRequest) returns (AccountResponse);
+    rpc FindAccountById(FindAccountRequest) returns (AccountResponse);
+    
+    // Profiles
+    rpc CreateProfile(ProfileRequest) returns (ProfileResponse);
+    rpc UpdateProfile(ProfileRequest) returns (ProfileResponse);
+    rpc GetProfilesByUserId(ProfileRequest) returns (ProfilesListResponse);
+    rpc GetProfileByUserIdAndName(ProfileRequest) returns (ProfileResponse);
+    rpc GetProfileByUserIdAndIsMain(ProfileRequest) returns (ProfileResponse);
+    rpc DeleteProfileByUserIdAndName(ProfileDeleteRequest) returns (IdentityActionResponse);
+    
+    // Preferences
+    rpc GetPreferencesByUserId(PreferencesRequest) returns (PreferencesResponse);
+    rpc SavePreferences(PreferencesRequest) returns (PreferencesResponse);
+    rpc DeletePreferencesByUserId(PreferencesRequest) returns (IdentityActionResponse);
+}

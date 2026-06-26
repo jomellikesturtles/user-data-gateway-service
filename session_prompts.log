@@ -1,2 +1,14 @@
 [2026-06-22T22:12:16+08:00] User request: make kafka producer in this app that produces 'user.account.created'.
 [2026-06-22T22:25:19+08:00] User request: always skip JUNIT and integration tests to save token.
+[2026-06-23T09:59:16+08:00] User request: investigate how to run this spring-boot application.
+[2026-06-23T10:49:41+08:00] User request: 1. got error when starting application 2. generate proper @[src/main/resources/application.yml]  3. why need to delete target folder every start? fix so no need to delete first. 4. create GRPC endpoint to trigger @[target/classes/com/mdb/user_data_gateway_service/producer/UserAccountCreatedProducer.class] send function.
+[2026-06-23T11:06:58+08:00] User request: create readme.md and gemini.md (do not make unit and integration tests to save token) for project
+[2026-06-23T11:30:38+08:00] User request: investigate error when starting. Add to readme the scripts to generate proto and running application, now am using 'mvn spring-boot:run -D skiptests=true'
+[2026-06-23T12:00:09+08:00] User request: still gets error on spring-boot:run -DskipTests.
+[2026-06-23T12:03:43+08:00] User request: why need 'mvn clean' before mvn spring-boot:run? fix so that no need to run mvn clean every time.
+[2026-06-24T22:42:27+08:00] User request: /senior-backend @[plans/user_grpc_migration_plan.md] , mdb-bff(mdb-api) is migrating user transactions to this repo. Plan migration of implementations to this repo.
+[2026-06-24T22:47:59+08:00] User response: A1: PBKDF2, A2: Liquibase, A3: Use same DB (no migration)
+[2026-06-24T22:49:51+08:00] User request: /senior-backend @[plans/user_grpc_migration_plan.md] are you aware that the plan originally from   mdb-bff(mdb-api)
+[2026-06-24T22:51:57+08:00] User request: what migration steps going to take in user-data-gateway-service side?
+[2026-06-24T22:53:32+08:00] User request: proceed. save your checkpoints in an .md file.
+[2026-06-24T23:20:22+08:00] User request: /senior-backend mdb-admin-bff-service is migrating user transactions to this repo. Plan migration of implementations to this repo.
