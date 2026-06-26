@@ -14,7 +14,7 @@ RUN mvn clean package -DskipTests -Pcli
 
 RUN echo "Proceeding to runtime..."
 # Stage 2: Runtime
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 # Run as non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
