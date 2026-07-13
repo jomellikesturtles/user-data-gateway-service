@@ -1,4 +1,4 @@
-package com.mdb.user_data_gateway_service.entity;
+package com.mdb.user_data_gateway_service.entity.interaction;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,20 +11,21 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "progress", uniqueConstraints = { @UniqueConstraint(columnNames = { "profile_id", "tmdb_id", "media_id" }) })
+@Table(name = "bookmark", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "tmdb_id" }) })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PlaybackProgress {
+public class Bookmark {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookmark_seq_gen")
+    @SequenceGenerator(name = "bookmark_seq_gen", sequenceName = "bookmark_seq", allocationSize = 50)
     @Column(name = "id")
-    private String id;
+    private Long id;
 
     @Column(name = "profile_id")
     private String profileId;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Column(name = "title")
@@ -41,9 +42,6 @@ public class PlaybackProgress {
 
     @Column(name = "year")
     private Integer year;
-
-    @Column(name = "percentage")
-    private Double percentage;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)

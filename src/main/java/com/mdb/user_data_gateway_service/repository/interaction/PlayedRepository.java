@@ -1,6 +1,6 @@
-package com.mdb.user_data_gateway_service.repository;
+package com.mdb.user_data_gateway_service.repository.interaction;
 
-import com.mdb.user_data_gateway_service.entity.Played;
+import com.mdb.user_data_gateway_service.entity.interaction.Played;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

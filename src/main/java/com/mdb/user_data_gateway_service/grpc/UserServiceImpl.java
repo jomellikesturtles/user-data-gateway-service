@@ -1,9 +1,9 @@
 package com.mdb.user_data_gateway_service.grpc;
 
-import com.mdb.user_data_gateway_service.entity.Account;
-import com.mdb.user_data_gateway_service.entity.User;
-import com.mdb.user_data_gateway_service.repository.AccountRepository;
-import com.mdb.user_data_gateway_service.repository.UserRepository;
+import com.mdb.user_data_gateway_service.entity.identity.Account;
+import com.mdb.user_data_gateway_service.entity.identity.User;
+import com.mdb.user_data_gateway_service.repository.identity.AccountRepository;
+import com.mdb.user_data_gateway_service.repository.identity.UserRepository;
 import com.mdb.user_data_gateway_service.producer.UserAccountCreatedEvent;
 import com.mdb.user_data_gateway_service.producer.UserAccountCreatedProducer;
 import com.mdb.user_data_gateway_service.utils.PasswordUtils;
@@ -11,6 +11,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.grpc.server.service.GrpcService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
@@ -29,7 +30,7 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
     public UserServiceImpl(UserRepository userRepository, 
                            AccountRepository accountRepository, 
                            UserAccountCreatedProducer kafkaProducer,
-                           TransactionTemplate transactionTemplate) {
+                           @Qualifier("identityTransactionTemplate") TransactionTemplate transactionTemplate) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
         this.kafkaProducer = kafkaProducer;

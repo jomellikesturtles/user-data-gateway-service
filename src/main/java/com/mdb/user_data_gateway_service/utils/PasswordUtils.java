@@ -22,6 +22,9 @@ public class PasswordUtils implements Serializable {
     }
 
     public static boolean check(String password, String stored) throws Exception {
+        if (stored != null && (stored.startsWith("$2a$") || stored.startsWith("$2b$") || stored.startsWith("$2y$"))) {
+            return BCrypt.checkpw(password, stored);
+        }
         String[] saltAndPass = stored.split("\\$");
         if (saltAndPass.length != 2) {
             throw new IllegalStateException("The stored password have the form 'salt$hash'");

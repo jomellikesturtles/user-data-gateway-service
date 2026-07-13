@@ -1,4 +1,4 @@
-package com.mdb.user_data_gateway_service.entity;
+package com.mdb.user_data_gateway_service.entity.interaction;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

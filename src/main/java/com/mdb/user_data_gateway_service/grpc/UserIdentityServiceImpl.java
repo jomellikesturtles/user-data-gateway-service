@@ -1,11 +1,11 @@
 package com.mdb.user_data_gateway_service.grpc;
 
-import com.mdb.user_data_gateway_service.entity.Account;
-import com.mdb.user_data_gateway_service.entity.Profile;
-import com.mdb.user_data_gateway_service.entity.Preferences;
-import com.mdb.user_data_gateway_service.repository.AccountRepository;
-import com.mdb.user_data_gateway_service.repository.ProfileRepository;
-import com.mdb.user_data_gateway_service.repository.PreferencesRepository;
+import com.mdb.user_data_gateway_service.entity.identity.Account;
+import com.mdb.user_data_gateway_service.entity.identity.Profile;
+import com.mdb.user_data_gateway_service.entity.identity.Preferences;
+import com.mdb.user_data_gateway_service.repository.identity.AccountRepository;
+import com.mdb.user_data_gateway_service.repository.identity.ProfileRepository;
+import com.mdb.user_data_gateway_service.repository.identity.PreferencesRepository;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     // --- ACCOUNTS ---
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void createAccount(CreateAccountRequest request, StreamObserver<AccountResponse> responseObserver) {
         LOGGER.info("createAccount request received for email: '{}'", request.getEmail());
         try {
@@ -70,7 +70,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void findAccountByEmail(FindAccountRequest request, StreamObserver<AccountResponse> responseObserver) {
         LOGGER.info("findAccountByEmail request received for email: '{}'", request.getEmail());
         try {
@@ -92,7 +92,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void findAccountById(FindAccountRequest request, StreamObserver<AccountResponse> responseObserver) {
         LOGGER.info("findAccountById request received for ID: '{}'", request.getId());
         try {
@@ -120,7 +120,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     // --- PROFILES ---
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void createProfile(ProfileRequest request, StreamObserver<ProfileResponse> responseObserver) {
         LOGGER.info("createProfile request received for user: '{}', name: '{}'", request.getUserId(), request.getName());
         try {
@@ -153,7 +153,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void updateProfile(ProfileRequest request, StreamObserver<ProfileResponse> responseObserver) {
         LOGGER.info("updateProfile request received for ID: '{}'", request.getId());
         try {
@@ -184,7 +184,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void getProfilesByUserId(ProfileRequest request, StreamObserver<ProfilesListResponse> responseObserver) {
         LOGGER.info("getProfilesByUserId request received for user: '{}'", request.getUserId());
         try {
@@ -202,7 +202,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void getProfileByUserIdAndName(ProfileRequest request, StreamObserver<ProfileResponse> responseObserver) {
         LOGGER.info("getProfileByUserIdAndName request received for user: '{}', name: '{}'", request.getUserId(), request.getName());
         try {
@@ -224,7 +224,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void getProfileByUserIdAndIsMain(ProfileRequest request, StreamObserver<ProfileResponse> responseObserver) {
         LOGGER.info("getProfileByUserIdAndIsMain request received for user: '{}', isMain: {}", request.getUserId(), request.getIsMain());
         try {
@@ -246,7 +246,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void deleteProfileByUserIdAndName(ProfileDeleteRequest request, StreamObserver<IdentityActionResponse> responseObserver) {
         LOGGER.info("deleteProfileByUserIdAndName request received for user: '{}', name: '{}'", request.getUserId(), request.getProfileName());
         try {
@@ -264,7 +264,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     // --- PREFERENCES ---
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(value = "identityTransactionManager", readOnly = true)
     public void getPreferencesByUserId(PreferencesRequest request, StreamObserver<PreferencesResponse> responseObserver) {
         LOGGER.info("getPreferencesByUserId request received for user: '{}'", request.getUserId());
         try {
@@ -298,7 +298,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void savePreferences(PreferencesRequest request, StreamObserver<PreferencesResponse> responseObserver) {
         LOGGER.info("savePreferences request received for user: '{}'", request.getUserId());
         try {
@@ -345,7 +345,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
     }
 
     @Override
-    @Transactional
+    @Transactional("identityTransactionManager")
     public void deletePreferencesByUserId(PreferencesRequest request, StreamObserver<IdentityActionResponse> responseObserver) {
         LOGGER.info("deletePreferencesByUserId request received for user: '{}'", request.getUserId());
         try {

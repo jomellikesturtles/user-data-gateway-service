@@ -1,15 +1,19 @@
 package com.mdb.user_data_gateway_service.grpc;
 
-import com.mdb.user_data_gateway_service.entity.*;
-import com.mdb.user_data_gateway_service.repository.*;
+import com.mdb.user_data_gateway_service.entity.identity.Profile;
+import com.mdb.user_data_gateway_service.entity.interaction.*;
+import com.mdb.user_data_gateway_service.repository.identity.ProfileRepository;
+import com.mdb.user_data_gateway_service.repository.interaction.*;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.grpc.server.service.GrpcService;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +33,7 @@ public class UserInteractionServiceImpl extends UserInteractionServiceGrpc.UserI
     private final MediaListRepository mediaListRepository;
     private final ListLinkMovieRepository listLinkMovieRepository;
     private final PlayedRepository playedRepository;
+    private final TransactionTemplate identityTransactionTemplate;
 
     public UserInteractionServiceImpl(BookmarkRepository bookmarkRepository,
                                        FavoriteRepository favoriteRepository,
@@ -37,7 +42,8 @@ public class UserInteractionServiceImpl extends UserInteractionServiceGrpc.UserI
                                        ReviewRepository reviewRepository,
                                        MediaListRepository mediaListRepository,
                                        ListLinkMovieRepository listLinkMovieRepository,
-                                       PlayedRepository playedRepository) {
+                                       PlayedRepository playedRepository,
+                                       @Qualifier("identityTransactionTemplate") TransactionTemplate identityTransactionTemplate) {
         this.bookmarkRepository = bookmarkRepository;
         this.favoriteRepository = favoriteRepository;
         this.progressRepository = progressRepository;
@@ -46,6 +52,7 @@ public class UserInteractionServiceImpl extends UserInteractionServiceGrpc.UserI
         this.mediaListRepository = mediaListRepository;
         this.listLinkMovieRepository = listLinkMovieRepository;
         this.playedRepository = playedRepository;
+        this.identityTransactionTemplate = identityTransactionTemplate;
     }
 
     // --- BOOKMARKS ---
@@ -976,7 +983,7 @@ public class UserInteractionServiceImpl extends UserInteractionServiceGrpc.UserI
                             .bio("")
                             .isMain(true)
                             .build();
-                    return profileRepository.saveAndFlush(profile).getId();
+                    return identityTransactionTemplate.execute(status -> profileRepository.saveAndFlush(profile).getId());
                 });
     }
 
