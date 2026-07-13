@@ -1,4 +1,4 @@
-package com.mdb.user_data_gateway_service.entity;
+package com.mdb.user_data_gateway_service.entity.interaction;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,21 +11,21 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "bookmark", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_id", "tmdb_id" }) })
+@Table(name = "favorite", uniqueConstraints = { @UniqueConstraint(columnNames = { "profile_id", "tmdb_id" }) })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Bookmark {
+public class Favorite {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookmark_seq_gen")
-    @SequenceGenerator(name = "bookmark_seq_gen", sequenceName = "bookmark_seq", allocationSize = 50)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "favorite_seq_gen")
+    @SequenceGenerator(name = "favorite_seq_gen", sequenceName = "favorite_seq", allocationSize = 50)
     @Column(name = "id")
     private Long id;
 
     @Column(name = "profile_id")
     private String profileId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private String userId;
 
     @Column(name = "title")
