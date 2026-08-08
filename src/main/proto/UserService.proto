@@ -94,6 +94,18 @@ message CountResponse {
     int64 count = 1;
 }
 
+message ChangePasswordRequest {
+    string username = 1;
+    string current_password = 2;
+    string new_password = 3;
+}
+
+message ResetPasswordRequest {
+    string username = 1;
+    string email = 2;
+    string new_password = 3;
+}
+
 service UserService {
     rpc triggerUserAccountCreated(UserAccountCreatedRequest) returns (UserAccountCreatedResponse);
     rpc GetUserById (UserRequest) returns (UserResponse);
@@ -102,6 +114,8 @@ service UserService {
     rpc Authenticate (AuthenticateRequest) returns (UserResponse);
     rpc RegisterUser (RegisterRequest) returns (ActionResponse);
     rpc UpdateUser (UserResponse) returns (UserResponse);
+    rpc ChangePassword (ChangePasswordRequest) returns (ActionResponse);
+    rpc ResetPassword (ResetPasswordRequest) returns (ActionResponse);
     
     // Integrated Admin-BFF specific RPCs
     rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);

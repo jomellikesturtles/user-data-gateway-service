@@ -17,6 +17,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import java.util.stream.Collectors;
 
 @GrpcService
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
@@ -315,6 +318,133 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             } else {
                 responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
             }
+        }
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest request, StreamObserver<ActionResponse> responseObserver) {
+        LOGGER.info("ChangePassword request received for username: '{}'", request.getUsername());
+        try {
+            User user = userRepository.findByUserName(request.getUsername());
+            if (user == null) {
+                LOGGER.warn("Change password failed: user not found with username '{}'", request.getUsername());
+                responseObserver.onNext(ActionResponse.newBuilder()
+                        .setSuccess(false)
+                        .setMessage("User not found")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Verify current password
+            if (!PasswordUtils.check(request.getCurrentPassword(), user.getPassword())) {
+                LOGGER.warn("Change password failed for user '{}': incorrect current password", request.getUsername());
+                responseObserver.onNext(ActionResponse.newBuilder()
+                        .setSuccess(false)
+                        .setMessage("Incorrect current password")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Update to new hashed password
+            String newHashed = PasswordUtils.getSaltedHash(request.getNewPassword());
+            user.setPassword(newHashed);
+            userRepository.saveAndFlush(user);
+            LOGGER.info("Successfully changed password for user '{}'", request.getUsername());
+
+            responseObserver.onNext(ActionResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Password changed successfully")
+                    .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Error in changePassword for user '{}'", request.getUsername(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request, StreamObserver<ActionResponse> responseObserver) {
+        LOGGER.info("ResetPassword request received for username: '{}', email: '{}'", request.getUsername(), request.getEmail());
+        try {
+            User user = userRepository.findByEmailOrUserName(request.getEmail(), request.getUsername());
+            if (user == null || !user.getUserName().equalsIgnoreCase(request.getUsername()) || !user.getEmail().equalsIgnoreCase(request.getEmail())) {
+                LOGGER.warn("Reset password failed: User verification failed for username '{}', email '{}'", request.getUsername(), request.getEmail());
+                responseObserver.onNext(ActionResponse.newBuilder()
+                        .setSuccess(false)
+                        .setMessage("Invalid username or email combination")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Hash and update password
+            String newHashed = PasswordUtils.getSaltedHash(request.getNewPassword());
+            user.setPassword(newHashed);
+            userRepository.saveAndFlush(user);
+            LOGGER.info("Successfully reset password for user '{}'", request.getUsername());
+
+            responseObserver.onNext(ActionResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Password reset successfully")
+                    .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Error in resetPassword for user '{}'", request.getUsername(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    public void getUsers(GetUsersRequest request, StreamObserver<GetUsersResponse> responseObserver) {
+        LOGGER.info("getUsers request received (page: {}, limit: {}, search: '{}')", request.getPage(), request.getLimit(), request.getSearch());
+        try {
+            int page = Math.max(0, request.getPage());
+            int limit = request.getLimit() <= 0 ? 10 : request.getLimit();
+            Page<User> userPage;
+            
+            if (request.getSearch() != null && !request.getSearch().trim().isEmpty()) {
+                userPage = userRepository.findByUserNameContainingOrEmailContaining(
+                    request.getSearch().trim(), request.getSearch().trim(), PageRequest.of(page, limit)
+                );
+            } else {
+                userPage = userRepository.findAll(PageRequest.of(page, limit));
+            }
+            
+            GetUsersResponse response = GetUsersResponse.newBuilder()
+                    .addAllUsers(userPage.getContent().stream()
+                            .map(this::mapToProto)
+                            .collect(Collectors.toList()))
+                    .setTotalCount(userPage.getTotalElements())
+                    .setTotalPages(userPage.getTotalPages())
+                    .build();
+                    
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Error in getUsers", e);
+            responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void countUsers(CountUsersRequest request, StreamObserver<CountResponse> responseObserver) {
+        LOGGER.info("countUsers request received");
+        try {
+            long count = userRepository.count();
+            CountResponse response = CountResponse.newBuilder()
+                    .setCount(count)
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            LOGGER.error("Error in countUsers", e);
+            responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
