@@ -1,6 +1,7 @@
 package com.mdb.user_data_gateway_service.grpc;
 
 import com.mdb.user_data_gateway_service.entity.identity.Account;
+import com.mdb.user_data_gateway_service.entity.identity.AccountStatusEnum;
 import com.mdb.user_data_gateway_service.entity.identity.Profile;
 import com.mdb.user_data_gateway_service.entity.identity.Preferences;
 import com.mdb.user_data_gateway_service.repository.identity.AccountRepository;
@@ -55,7 +56,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
             Account account = Account.builder()
                     .id(UUID.randomUUID())
                     .email(request.getEmail())
-                    .status("ACTIVE")
+                    .status(AccountStatusEnum.ACTIVE)
                     .build();
 
             accountRepository.saveAndFlush(account);
@@ -367,7 +368,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
         return AccountResponse.newBuilder()
                 .setId(account.getId() != null ? account.getId().toString() : "")
                 .setEmail(account.getEmail() != null ? account.getEmail() : "")
-                .setStatus(account.getStatus() != null ? account.getStatus() : "")
+                .setStatus(account.getStatus() != null ? String.valueOf(account.getStatus()) : "")
                 .setCreatedAt(epoch)
                 .build();
     }

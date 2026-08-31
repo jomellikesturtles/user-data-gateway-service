@@ -36,6 +36,7 @@ message RegisterRequest {
     string last_name = 4;
     string password = 5;
     string account_id = 6;
+    string keycloak_id = 7;
 }
 
 message UserResponse {
@@ -55,6 +56,11 @@ message UserResponse {
 message ActionResponse {
     bool success = 1;
     string message = 2;
+}
+
+message UserAccountCreatedResponseV2 {
+    string message = 1;
+    string account_id = 2;
 }
 
 message GetUsersRequest {
@@ -113,6 +119,9 @@ service UserService {
     rpc GetUserByEmailOrUsername (UserRequest) returns (UserResponse);
     rpc Authenticate (AuthenticateRequest) returns (UserResponse);
     rpc RegisterUser (RegisterRequest) returns (ActionResponse);
+    rpc RegisterUserV2 (RegisterRequest) returns (UserAccountCreatedResponseV2);
+    rpc UpdateAccountKeycloak (RegisterRequest) returns (UserAccountCreatedResponseV2);
+
     rpc UpdateUser (UserResponse) returns (UserResponse);
     rpc ChangePassword (ChangePasswordRequest) returns (ActionResponse);
     rpc ResetPassword (ResetPasswordRequest) returns (ActionResponse);

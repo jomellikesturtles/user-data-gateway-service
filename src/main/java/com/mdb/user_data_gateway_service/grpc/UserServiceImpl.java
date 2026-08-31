@@ -1,41 +1,53 @@
 package com.mdb.user_data_gateway_service.grpc;
 
-import com.mdb.user_data_gateway_service.entity.identity.Account;
-import com.mdb.user_data_gateway_service.entity.identity.User;
+import com.mdb.user_data_gateway_service.entity.identity.*;
 import com.mdb.user_data_gateway_service.repository.identity.AccountRepository;
+import com.mdb.user_data_gateway_service.repository.identity.PreferencesRepository;
+import com.mdb.user_data_gateway_service.repository.identity.ProfileRepository;
 import com.mdb.user_data_gateway_service.repository.identity.UserRepository;
 import com.mdb.user_data_gateway_service.producer.UserAccountCreatedEvent;
 import com.mdb.user_data_gateway_service.producer.UserAccountCreatedProducer;
 import com.mdb.user_data_gateway_service.utils.PasswordUtils;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+
 import java.util.stream.Collectors;
 
 @GrpcService
 public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
 
+    private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final PreferencesRepository preferencesRepository;
     private final UserAccountCreatedProducer kafkaProducer;
     private final TransactionTemplate transactionTemplate;
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    public UserServiceImpl(UserRepository userRepository, 
-                           AccountRepository accountRepository, 
+    public UserServiceImpl(UserRepository userRepository,
+                           AccountRepository accountRepository,
                            UserAccountCreatedProducer kafkaProducer,
+                           ProfileRepository profileRepository,
+                           PreferencesRepository preferencesRepository,
                            @Qualifier("identityTransactionTemplate") TransactionTemplate transactionTemplate) {
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
+        this.profileRepository = profileRepository;
+        this.preferencesRepository = preferencesRepository;
         this.kafkaProducer = kafkaProducer;
         this.transactionTemplate = transactionTemplate;
     }
@@ -201,16 +213,16 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
             UserAccountCreatedEvent event = transactionTemplate.execute(status -> {
                 try {
                     // Create account if not present or resolve UUID
-                    UUID accountId = request.getAccountId().isEmpty() 
-                            ? UUID.randomUUID() 
+                    UUID accountId = request.getAccountId().isEmpty()
+                            ? UUID.randomUUID()
                             : UUID.fromString(request.getAccountId());
-                    
+
                     if (request.getAccountId().isEmpty() || !accountRepository.existsById(accountId)) {
                         LOGGER.info("Creating new account with ID: {} for email: {}", accountId, request.getEmail());
                         Account account = Account.builder()
                                 .id(accountId)
                                 .email(request.getEmail())
-                                .status("ACTIVE")
+                                .status(AccountStatusEnum.ACTIVE)
                                 .build();
                         accountRepository.saveAndFlush(account);
                     }
@@ -260,6 +272,113 @@ public class UserServiceImpl extends UserServiceGrpc.UserServiceImplBase {
         }
     }
 
+    @Transactional // replaces transactionTemplate
+    @Override
+    public void registerUserV2(RegisterRequest request, StreamObserver<UserAccountCreatedResponseV2> responseStreamObserver) {
+        LOGGER.info("Register request received for username: '{}', email: '{}'", request.getUsername(), request.getEmail());
+
+        // Account - contains credentials (email, keycloak id, username)
+        // User - one to want with Account (account_id fk, first name, last name, location)
+        // Profile - Many to one with User (user_id fk, name)
+        // create account
+        // create user
+
+        //create profile
+        try {
+            String username = request.getUsername();
+            String email = request.getEmail();
+
+//            System.out.println("Found email:" + accountRepository.findByEmail(email).getId());
+
+            if (accountRepository.findByEmail(email) != null) {
+                LOGGER.warn("Registration failed: email '{}'", email);
+                responseStreamObserver.onNext(UserAccountCreatedResponseV2.newBuilder()
+                        .setMessage("Account Email already exists").build());
+                responseStreamObserver.onCompleted();
+                return;
+            }
+            if (userRepository.findByEmailOrUserName(email, username) != null) {
+                LOGGER.warn("Registration failed: Username '{}' or email '{}'", username, email);
+                responseStreamObserver.onNext(UserAccountCreatedResponseV2.newBuilder()
+                        .setMessage("Username or Email already exists").build());
+                responseStreamObserver.onCompleted();
+                return;
+            }
+            Account account = Account.builder()
+                    .email(email)
+                    .status(AccountStatusEnum.ACTIVE)
+                    .build();
+            Account createdAccount = accountRepository.save(account);
+
+            User user = User.builder()
+                    .userName(username)
+                    .accountId(createdAccount.getId())
+                    .email(email)
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .isActive(true)
+                    .roles(Collections.singletonList("ROLE_USER"))
+                    .password(request.getPassword())
+                    .build();
+
+            User createdUser = userRepository.save(user);
+
+            Profile profile = Profile.builder()
+                    .userId(createdUser.getUid().toString())
+                    .isMain(true)
+                    .name(request.getUsername())
+                    .build();
+
+            profileRepository.save(profile);
+
+            // Provision default preferences
+            Preferences preferences = Preferences
+                    .builder()
+                    .userId(String.valueOf(user.getUid()))
+                    .build();
+            preferencesRepository.save(preferences);
+
+            responseStreamObserver.onNext(UserAccountCreatedResponseV2.newBuilder()
+                    .setAccountId(createdAccount.getId().toString())
+                    .setMessage("User registered and account created successfully")
+                    .build());
+            responseStreamObserver.onCompleted();
+        } catch (RuntimeException e) {
+            LOGGER.error("Error in register for user: '{}'", request.getUsername(), e);
+            responseStreamObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void updateAccountKeycloak(RegisterRequest request, StreamObserver<UserAccountCreatedResponseV2> responseStreamObserver) {
+        try {
+            String email = request.getEmail();
+            Optional<Account> foundAccount = accountRepository.findById(UUID.fromString(request.getAccountId()));
+
+            if (foundAccount.isEmpty()) {
+                LOGGER.warn("Registration failed: email '{}'", email);
+                responseStreamObserver.onNext(UserAccountCreatedResponseV2.newBuilder()
+                        .setMessage("Account Email already exists").build());
+                responseStreamObserver.onCompleted();
+                return;
+            }
+            Account account = foundAccount.get();
+            account.setKeycloakId(request.getKeycloakId());
+            accountRepository.saveAndFlush(account);
+
+            responseStreamObserver.onNext(UserAccountCreatedResponseV2.newBuilder()
+                    .setAccountId(account.getId().toString())
+                    .setMessage("User registered and account created successfully")
+                    .build());
+            responseStreamObserver.onCompleted();
+        } catch (RuntimeException e) {
+            LOGGER.error("Error in register for user: '{}'", request.getUsername(), e);
+            responseStreamObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            throw new RuntimeException(e);
+        }
+
+    }
     @Override
     public void updateUser(UserResponse request, StreamObserver<UserResponse> responseObserver) {
         LOGGER.info("UpdateUser request received for ID: {}", request.getId());
