@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class Account {
     @Id
     @Column(name = "id", columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "email", nullable = false, unique = true)
@@ -26,13 +28,17 @@ public class Account {
     private LocalDateTime createdAt;
 
     @Column(name = "status")
-    private String status;
+    private AccountStatusEnum status;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         if (status == null) {
-            status = "ACTIVE";
+            status = AccountStatusEnum.ACTIVE;
         }
     }
+
+    @Column(name = "keycloak_id", unique = true)
+    private String keycloakId;
+
 }
