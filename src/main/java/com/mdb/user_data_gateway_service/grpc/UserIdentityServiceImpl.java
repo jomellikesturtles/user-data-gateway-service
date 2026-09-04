@@ -368,6 +368,7 @@ public class UserIdentityServiceImpl extends UserIdentityServiceGrpc.UserIdentit
         return AccountResponse.newBuilder()
                 .setId(account.getId() != null ? account.getId().toString() : "")
                 .setEmail(account.getEmail() != null ? account.getEmail() : "")
+                .setKeycloakId(account.getKeycloakId() != null ? account.getKeycloakId() : "")
                 .setStatus(account.getStatus() != null ? String.valueOf(account.getStatus()) : "")
                 .setCreatedAt(epoch)
                 .build();

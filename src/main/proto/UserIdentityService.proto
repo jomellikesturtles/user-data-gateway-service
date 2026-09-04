@@ -14,8 +14,9 @@ message CreateAccountRequest {
 message AccountResponse {
     string id = 1;
     string email = 2;
-    string status = 3;
-    int64 created_at = 4;
+    string keycloak_id = 3;
+    string status = 4;
+    int64 created_at = 5;
 }
 
 message FindAccountRequest {
