@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM maven:3-eclipse-temurin-26 AS builder
+FROM maven:3-eclipse-temurin-27 AS builder
 WORKDIR /app
 COPY pom.xml .
 # Cache dependencies
